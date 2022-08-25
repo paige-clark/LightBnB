@@ -20,18 +20,33 @@ const users = require('./json/users.json');
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  let user;
-  for (const userId in users) {
-    user = users[userId];
-    if (user.email.toLowerCase() === email.toLowerCase()) {
-      break;
-    } else {
-      user = null;
-    }
-  }
-  return Promise.resolve(user);
+  const query = `SELECT * FROM users WHERE users.email = $1;`
+
+  return pool.query(query, [email])
+    .then((result) => {
+      console.log(result.rows[0]);
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(null);
+      return null;
+    });
+
+
+  // let user;
+  // for (const userId in users) {
+  //   user = users[userId];
+  //   if (user.email.toLowerCase() === email.toLowerCase()) {
+  //     break;
+  //   } else {
+  //     user = null;
+  //   }
+  // }
+  // return Promise.resolve(user);
 }
 exports.getUserWithEmail = getUserWithEmail;
+
+
 
 /**
  * Get a single user from the database given their id.
@@ -39,9 +54,24 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
+
+  const query = `SELECT * FROM users WHERE users.id = $1;`
+
+  return pool.query(query, [id])
+    .then((result) => {
+      console.log(result.rows[0]);
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(null);
+      return null;
+    });
+
+
+  // return Promise.resolve(users[id]);
 }
 exports.getUserWithId = getUserWithId;
+
 
 
 /**
@@ -50,10 +80,23 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser =  function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+  const query = `INSERT INTO
+                    users (name, email, password)
+                 VALUES
+                    ($1, $2, $3)
+                 RETURNING *;`
+
+  const args = [ user.name, user.email, user.password ]
+  
+  return pool.query(query, args)
+    .then((result) => {
+      console.log(result.rows[0]);
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(null);
+      return null;
+    });
 }
 exports.addUser = addUser;
 
@@ -90,7 +133,7 @@ const getAllProperties = function(options, limit = 10) {
     LIMIT $1;
     `, [ limit ])
     .then((result) => {
-      console.log(result.rows);
+      // console.log(result.rows);
       return result.rows;
     })
     .catch((err) => {
